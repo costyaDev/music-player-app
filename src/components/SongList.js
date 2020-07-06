@@ -9,17 +9,19 @@ import {
   makeStyles,
   CardMedia,
 } from "@material-ui/core";
-import { PlayArrow, Save } from "@material-ui/icons";
+import { PlayArrow, Save, Details } from "@material-ui/icons";
+import { useQuery } from "@apollo/react-hooks";
+import { GET_SONGS } from "../graphql/queries";
 
 const SongList = () => {
-  let loading = false;
+  const { data, loading, error } = useQuery(GET_SONGS);
 
-  const song = {
-    title: "costa",
-    artist: "epshtein",
-    thumbnail:
-      "https://s3-eu-central-1.amazonaws.com/wow-website/wp-content/uploads/2019/07/01133105/Delivery_banner11.jpg",
-  };
+  // const song = {
+  //   title: "costa",
+  //   artist: "epshtein",
+  //   thumbnail:
+  //     "https://s3-eu-central-1.amazonaws.com/wow-website/wp-content/uploads/2019/07/01133105/Delivery_banner11.jpg",
+  // };
 
   if (loading) {
     return (
@@ -35,10 +37,13 @@ const SongList = () => {
       </div>
     );
   }
+
+  if (error) return <div>Error fetching songs</div>;
+
   return (
     <div>
-      {Array.from({ length: 10 }, () => song).map((song, index) => (
-        <Song key={index} song={song} />
+      {data.songs.map((song) => (
+        <Song key={song.id} song={song} />
       ))}
     </div>
   );

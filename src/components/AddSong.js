@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   InputAdornment,
@@ -10,6 +10,9 @@ import {
   makeStyles,
 } from "@material-ui/core";
 import { Link, AddBoxOutlined } from "@material-ui/icons";
+import ReactPlayer from "react-player";
+import SoundcloudPlayer from "react-player/lib/players/SoundCloud";
+import YoutubePlayer from "react-player/lib/players/YouTube";
 
 const useStyle = makeStyles((theme) => ({
   container: {
@@ -31,12 +34,75 @@ const useStyle = makeStyles((theme) => ({
 }));
 
 const AddSong = () => {
+  const [url, setUrl] = useState("");
+  const [playabel, setPlayable] = useState(false);
   const [dialog, setDialog] = useState(false);
+  const [song, setSong] = useState({
+    duration: 0,
+    title: "",
+    artist: "",
+    thumbnail: "",
+  });
   const classes = useStyle();
+
+  useEffect(() => {
+    const isPlayable =
+      SoundcloudPlayer.canPlay(url) || YoutubePlayer.canPlay(url);
+    setPlayable(isPlayable);
+  }, [url]);
+
+  const handleChangeSong = (e) => {
+    const { name, value } = e.target;
+    setSong((prevSong) => ({
+      ...prevSong,
+      [name]: value,
+    }));
+  };
+
+  const handleEditSong = async ({ player }) => {
+    const nestedPlayer = player.player.player;
+    let songData;
+    if (nestedPlayer.getVideoData) {
+      songData = getYouTubeInfo(nestedPlayer);
+    } else if (nestedPlayer.getCurrentSound) {
+      songData = await getSoundCloudInfo(nestedPlayer);
+    }
+    setSong({ ...songData, url });
+  };
+
+  const getYouTubeInfo = (player) => {
+    const duration = player.getDuration();
+    const { title, video_id, author } = player.getVideoData();
+    const thumbnail = `http://img.youtube.com/vi/${video_id}/0.jpg`;
+    return {
+      duration,
+      title,
+      artist: author,
+      thumbnail,
+    };
+  };
+
+  const getSoundCloudInfo = (player) => {
+    return new Promise((resolve) => {
+      player.getCurrentSound((songData) => {
+        if (songData) {
+          resolve({
+            duration: Number(songData.duration / 1000),
+            title: songData.title,
+            artist: songData.user.username,
+            thumbnail: songData.artwork_url.replace("-large", "-t500x500"),
+          });
+        }
+      });
+    });
+  };
 
   const handleCloseDialog = () => {
     setDialog(false);
   };
+
+  const { thumbnail, title, artist } = song;
+
   return (
     <div className={classes.container}>
       <Dialog
@@ -47,13 +113,29 @@ const AddSong = () => {
         <DialogTitle>Edit Song</DialogTitle>
         <DialogContent>
           <img
-            src="https://s3-eu-central-1.amazonaws.com/wow-website/wp-content/uploads/2019/07/01133105/Delivery_banner11.jpg"
+            src={thumbnail}
             alt="song thumbnail"
             className={classes.thumbnail}
           />
-          <TextField margin="dense" name="title" label="Title" fullWidth />
-          <TextField margin="dense" name="artist" label="Artist" fullWidth />
           <TextField
+            onChange={handleChangeSong}
+            value={title}
+            margin="dense"
+            name="title"
+            label="Title"
+            fullWidth
+          />
+          <TextField
+            onChange={handleChangeSong}
+            value={artist}
+            margin="dense"
+            name="artist"
+            label="Artist"
+            fullWidth
+          />
+          <TextField
+            onChange={handleChangeSong}
+            value={thumbnail}
             margin="dense"
             name="thumbnail"
             label="Thumbnail"
@@ -70,6 +152,8 @@ const AddSong = () => {
         </DialogContent>
       </Dialog>
       <TextField
+        onChange={(e) => setUrl(e.target.value)}
+        value={url}
         className={classes.urlInput}
         placeholder="Add Youtube or Soundcloud URL"
         fullWidth
@@ -84,6 +168,7 @@ const AddSong = () => {
         }}
       />
       <Button
+        disabled={!playabel}
         className={classes.addSongButton}
         onClick={() => setDialog(true)}
         variant="contained"
@@ -92,6 +177,7 @@ const AddSong = () => {
       >
         Add
       </Button>
+      <ReactPlayer url={url} hidden onReady={handleEditSong} />
     </div>
   );
 };
