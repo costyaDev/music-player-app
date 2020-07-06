@@ -9,7 +9,7 @@ import {
   makeStyles,
   CardMedia,
 } from "@material-ui/core";
-import { PlayArrow, Save, Height } from "@material-ui/icons";
+import { PlayArrow, Save } from "@material-ui/icons";
 
 const SongList = () => {
   let loading = false;

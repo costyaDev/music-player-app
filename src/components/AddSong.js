@@ -47,7 +47,7 @@ const AddSong = () => {
         <DialogTitle>Edit Song</DialogTitle>
         <DialogContent>
           <img
-            src="https://lh3.googleusercontent.com/proxy/F6_P1Gce4FCkyC-ig20YvkSiKNDze7gKR4xkhoxVzdrX6O5mn7A3_7g__507jGPIMju45SePsYnm0nLZ2yKHTAg6u37i0iJQ5JU"
+            src="https://s3-eu-central-1.amazonaws.com/wow-website/wp-content/uploads/2019/07/01133105/Delivery_banner11.jpg"
             alt="song thumbnail"
             className={classes.thumbnail}
           />
