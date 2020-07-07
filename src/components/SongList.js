@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   CircularProgress,
   Card,
@@ -9,9 +9,11 @@ import {
   makeStyles,
   CardMedia,
 } from "@material-ui/core";
-import { PlayArrow, Save, Details } from "@material-ui/icons";
-import { useSubscription } from "@apollo/react-hooks";
+import { PlayArrow, Save, Pause } from "@material-ui/icons";
+import { useSubscription, useMutation } from "@apollo/react-hooks";
 import { GET_SONGS } from "../graphql/subscriptions";
+import { SongContext } from "../App";
+import { ADD_OR_REMOVE_FROM_QUEUE } from "../graphql/mutation";
 
 const SongList = () => {
   const { data, loading, error } = useSubscription(GET_SONGS);
@@ -21,8 +23,7 @@ const SongList = () => {
   //   artist: "epshtein",
   //   thumbnail:
   //     "https://s3-eu-central-1.amazonaws.com/wow-website/wp-content/uploads/2019/07/01133105/Delivery_banner11.jpg",
-  // };
-
+  // }
   if (loading) {
     return (
       <div
@@ -70,8 +71,32 @@ const useStyle = makeStyles((theme) => ({
 }));
 
 const Song = ({ song }) => {
+  const [addOrRemoveFromQueue] = useMutation(ADD_OR_REMOVE_FROM_QUEUE, {
+    onCompleted: (data) => {
+      localStorage.setItem("queue", JSON.stringify(data.addOrRemoveFromQueue));
+    },
+  });
+  const { id } = song;
+  const { state, dispatch } = useContext(SongContext);
   const { thumbnail, title, artist } = song;
   const classes = useStyle();
+  const [currentSongPlaying, setCurrentSongPlaying] = useState(false);
+
+  useEffect(() => {
+    const isSongPlaying = state.isPlaying && id === state.song.id;
+    setCurrentSongPlaying(isSongPlaying);
+  }, [id, state.song.id, state.isPlaying]);
+
+  const handleTogglePlay = () => {
+    dispatch({ type: "SET_SONG", payload: { song } });
+    dispatch(state.isPlaying ? { type: "PAUSE_SONG" } : { type: "PLAY_SONG" });
+  };
+
+  const handleAddOrRemoveFromQueue = () => {
+    addOrRemoveFromQueue({
+      variables: { input: { ...song, __typename: "Song" } },
+    });
+  };
 
   return (
     <Card className={classes.container}>
@@ -87,10 +112,14 @@ const Song = ({ song }) => {
             </Typography>
           </CardContent>
           <CardActions>
-            <IconButton color="primary" size="small">
-              <PlayArrow />
+            <IconButton onClick={handleTogglePlay} color="primary" size="small">
+              {currentSongPlaying ? <Pause /> : <PlayArrow />}
             </IconButton>
-            <IconButton color="secondary" size="small">
+            <IconButton
+              onClick={handleAddOrRemoveFromQueue}
+              color="secondary"
+              size="small"
+            >
               <Save />
             </IconButton>
           </CardActions>

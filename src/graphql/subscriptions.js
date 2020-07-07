@@ -5,10 +5,10 @@ export const GET_SONGS = gql`
     songs(order_by: { created_at: desc }) {
       artist
       duration
+      url
       id
       thumbnail
       title
-      url
     }
   }
 `;

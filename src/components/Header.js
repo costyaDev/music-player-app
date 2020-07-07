@@ -15,7 +15,7 @@ const Header = () => {
       <Toolbar>
         <HeadsetTwoTone />
         <Typography className={classes.title} variant="h6" component="h1">
-          Music Player Sshare
+          Music Player Share
         </Typography>
       </Toolbar>
     </AppBar>
